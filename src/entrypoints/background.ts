@@ -20,9 +20,9 @@ export default defineBackground(async () => {
       const videoIdLast = await storage.getItem("local:lastVideoId");
       if (isReleasedToday) {
         await storage.setItem("local:lastVideoId", videoId);
-        await browser.action.setBadgeText({text: "New Video"})
+        await browser.action.setBadgeText({text: "New"})
       } else if (videoIdLast) {
-        await browser.action.setBadgeText({text: "Old Video"})
+        await browser.action.setBadgeText({text: "Old"})
       }
     }
   });
