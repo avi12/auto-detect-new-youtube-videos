@@ -4,8 +4,8 @@ import {defineConfig} from "wxt";
 export default defineConfig({
   extensionApi: "chrome",
   manifest: {
-    name: "Auto Launch YouTube Videos",
-    description: "Automatically launch YouTube videos when you open a new tab.",
+    name: "Auto Detect New YouTube Videos",
+    description: "Automatically detect new YouTube videos.",
     action: {},
     permissions: ["alarms", "storage"],
     host_permissions: ["https://www.youtube.com/*"],
