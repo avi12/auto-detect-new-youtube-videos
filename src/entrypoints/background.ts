@@ -1,4 +1,4 @@
-export default defineBackground(async () => {
+export default defineBackground(() => {
   browser.alarms.create({periodInMinutes: 5});
 
   function getLocalDate() {
@@ -66,13 +66,13 @@ export default defineBackground(async () => {
 
   browser.action.onClicked.addListener(async () => {
     const lastVideoId = await storage.getItem("local:lastVideoId");
+    const badgeText = await browser.action.getBadgeText({ tabId: undefined });
 
-    if (lastVideoId) {
+    if (lastVideoId && badgeText !== "") {
       await browser.tabs.create({url: `https://www.youtube.com/watch?v=${lastVideoId}`});
 
       await storage.setItem("local:lastBadgeResetDate", getLocalDate());
       await browser.action.setBadgeText({text: ""});
     }
   });
-
 })
