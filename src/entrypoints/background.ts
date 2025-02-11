@@ -1,5 +1,5 @@
 export default defineBackground(() => {
-  browser.alarms.create({periodInMinutes: 5});
+  browser.alarms.create({ periodInMinutes: 5 });
 
   function getLocalDate() {
     const date = new Date();
@@ -12,6 +12,7 @@ export default defineBackground(() => {
   browser.alarms.onAlarm.addListener(async () => {
     const videoIdLast = await storage.getItem("local:lastVideoId");
     const lastBadgeResetDate = await storage.getItem("local:lastBadgeResetDate");
+    const lastVideoDate = await storage.getItem("local:lastVideoDate"); // New: Stores when the last video was found
     const today = getLocalDate();
 
     const body = await (await fetch("https://www.youtube.com/@KAN11/videos")).text();
@@ -29,8 +30,8 @@ export default defineBackground(() => {
         continue;
       }
 
-      const {videoId, title} = video;
-      const {text} = title.runs[0];
+      const { videoId, title } = video;
+      const { text } = title.runs[0];
 
       if (!text.includes("מהצד השני")) {
         continue;
@@ -42,25 +43,23 @@ export default defineBackground(() => {
       }
 
       const [day, month, year] = dateMatch[0].split(".");
-      const dateVideo = new Date(year, month - 1, day);
+      const videoDateStr = `${year}-${month}-${day}`;
 
-      const isReleasedToday =
-        dateVideo.getDate() === new Date().getDate() &&
-        dateVideo.getMonth() === new Date().getMonth() &&
-        dateVideo.getFullYear() === new Date().getFullYear();
+      const isReleasedToday = videoDateStr === today;
 
       if (isReleasedToday) {
         await storage.setItem("local:lastVideoId", videoId);
+        await storage.setItem("local:lastVideoDate", videoDateStr);
 
         if (lastBadgeResetDate !== today) {
-          await browser.action.setBadgeText({text: "New"});
+          await browser.action.setBadgeText({ text: "New" });
         }
         return;
       }
     }
 
-    if (videoIdLast && lastBadgeResetDate !== today) {
-      await browser.action.setBadgeText({text: "Old"});
+    if (videoIdLast && lastVideoDate && lastVideoDate !== today && lastBadgeResetDate !== today) {
+      await browser.action.setBadgeText({ text: "Old" });
     }
   });
 
@@ -69,10 +68,11 @@ export default defineBackground(() => {
     const badgeText = await browser.action.getBadgeText({ tabId: undefined });
 
     if (lastVideoId && badgeText !== "") {
-      await browser.tabs.create({url: `https://www.youtube.com/watch?v=${lastVideoId}`});
+      await browser.tabs.create({ url: `https://www.youtube.com/watch?v=${lastVideoId}` });
 
       await storage.setItem("local:lastBadgeResetDate", getLocalDate());
-      await browser.action.setBadgeText({text: ""});
+      await browser.action.setBadgeText({ text: "" });
     }
   });
+
 })
