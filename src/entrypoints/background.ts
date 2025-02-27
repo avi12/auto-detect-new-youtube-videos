@@ -1,5 +1,5 @@
 export default defineBackground(() => {
-  browser.alarms.create({ periodInMinutes: 5 });
+  browser.alarms.create({periodInMinutes: 5});
 
   function getLocalDate() {
     const date = new Date();
@@ -10,9 +10,8 @@ export default defineBackground(() => {
   }
 
   browser.alarms.onAlarm.addListener(async () => {
-    const lastVideoId = await storage.getItem("local:lastVideoId");
-    const lastBadgeResetDate = await storage.getItem("local:lastBadgeResetDate");
-    const lastVideoDate = await storage.getItem("local:lastVideoDate");
+    const latestVideoId = await storage.getItem("local:latestVideoId");
+    const viewState = await storage.getItem("local:viewState");
     const today = getLocalDate();
 
     const body = await (await fetch("https://www.youtube.com/@KAN11/videos")).text();
@@ -41,30 +40,33 @@ export default defineBackground(() => {
       const [day, month, year] = dateMatch.split(".");
       const videoDateStr = `${year}-${month}-${day}`;
       const isReleasedToday = videoDateStr === today;
-      if (isReleasedToday) {
-        await storage.setItem("local:lastVideoId", videoId);
-        await storage.setItem("local:lastVideoDate", videoDateStr);
 
-        if (lastBadgeResetDate !== today) {
-          await browser.action.setBadgeText({ text: "New" });
-        }
-        return;
+      const isNewVideo = videoId !== latestVideoId;
+      if (isNewVideo) {
+        await storage.setItem("local:latestVideoId", videoId);
+        await storage.setItem("local:viewState", "unviewed");
       }
-    }
 
-    if (lastVideoId && lastVideoDate !== today && lastBadgeResetDate !== today) {
-      await browser.action.setBadgeText({ text: "Old" });
+      if (viewState === "unviewed") {
+        if (isReleasedToday) {
+          await browser.action.setBadgeText({text: "New"});
+        } else {
+          await browser.action.setBadgeText({text: "Old"});
+        }
+      }
+
+      return;
     }
   });
 
   browser.action.onClicked.addListener(async () => {
-    const lastVideoId = await storage.getItem("local:lastVideoId");
-    if (lastVideoId) {
-      await browser.tabs.create({ url: `https://www.youtube.com/watch?v=${lastVideoId}` });
+    const latestVideoId = await storage.getItem("local:latestVideoId");
+    if (latestVideoId) {
+      await browser.tabs.create({url: `https://www.youtube.com/watch?v=${latestVideoId}`});
 
-      await storage.removeItem("local:lastVideoId");
-      await storage.setItem("local:lastBadgeResetDate", getLocalDate());
-      await browser.action.setBadgeText({ text: "" });
+      // Mark as viewed
+      await storage.setItem("local:viewState", "viewed");
+      await browser.action.setBadgeText({text: ""});
     }
   });
 })
