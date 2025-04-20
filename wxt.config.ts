@@ -1,8 +1,7 @@
-import {defineConfig} from "wxt";
+import { defineConfig } from "wxt";
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
-  extensionApi: "chrome",
   manifest: {
     name: "Auto Detect New YouTube Videos",
     description: "Automatically detect new YouTube videos.",
@@ -12,4 +11,6 @@ export default defineConfig({
   },
   srcDir: "src",
   outDir: "build",
+  publicDir: "src/public"
 });
+
