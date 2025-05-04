@@ -164,11 +164,11 @@ export default defineBackground(() => {
     }
   });
 
-  browser.action.onClicked.addListener(async () => {
+  browser.action.onClicked.addListener(async tab => {
     const latestVideoId = await latestVideoIdStorage.getValue();
     if (latestVideoId) {
       console.log(`Action clicked. Opening video ID: ${latestVideoId}`);
-      await browser.tabs.create({url: `https://www.youtube.com/watch?v=${latestVideoId}`});
+      await browser.tabs.create({url: `https://www.youtube.com/watch?v=${latestVideoId}`, index: tab.index + 1});
 
       // Mark as viewed
       await viewStateStorage.setValue(VIEW_STATE_VIEWED);
